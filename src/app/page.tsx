@@ -5,10 +5,11 @@ import { ArrowRight, Globe2, Heart, Users } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Progress } from '@/components/ui/Progress';
-import { mockPrograms } from '@/lib/data';
+import { getPrograms } from '@/lib/data';
 
 export default function Home() {
-  const featuredPrograms = mockPrograms.slice(0, 3);
+  const programs = getPrograms();
+  const featuredPrograms = programs.slice(0, 3);
 
   return (
     <div className="flex flex-col min-h-screen">

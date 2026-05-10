@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Progress } from '@/components/ui/Progress';
-import { mockPrograms } from '@/lib/data';
+import { getPrograms } from '@/lib/data';
 
 export const metadata = {
   title: 'Our Programs | Hope Foundation',
@@ -12,6 +12,8 @@ export const metadata = {
 };
 
 export default function ProgramsPage() {
+  const programs = getPrograms();
+
   return (
     <div className="min-h-screen bg-slate-50 py-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
@@ -23,7 +25,7 @@ export default function ProgramsPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {mockPrograms.map((program) => (
+          {programs.map((program) => (
             <Card key={program.id} className="flex flex-col group hover:shadow-lg transition-all duration-300">
               <div className="relative h-64 w-full overflow-hidden">
                 <Image 

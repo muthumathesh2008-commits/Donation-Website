@@ -6,7 +6,7 @@ import { ArrowLeft, Target, TrendingUp, Users } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Progress } from '@/components/ui/Progress';
-import { mockPrograms } from '@/lib/data';
+import { getProgram } from '@/lib/data';
 
 export default async function ProgramDetail({
   params,
@@ -14,7 +14,7 @@ export default async function ProgramDetail({
   params: Promise<{ id: string }>;
 }) {
   const resolvedParams = await params;
-  const program = mockPrograms.find((p) => p.id === resolvedParams.id);
+  const program = getProgram(resolvedParams.id);
 
   if (!program) {
     notFound();
@@ -88,8 +88,8 @@ export default async function ProgramDetail({
             </section>
           </div>
 
-          {/* Sticky Donation Sidebar */}
-          <div className="w-full lg:w-1/3 sticky top-28">
+          {/* Desktop Sticky Donation Sidebar */}
+          <div className="hidden lg:block w-full lg:w-1/3 sticky top-28">
             <Card className="border-emerald-100 shadow-lg relative overflow-visible">
               {/* Top Accent */}
               <div className="absolute top-0 left-0 right-0 h-2 bg-emerald-500 rounded-t-3xl" />
@@ -112,7 +112,7 @@ export default async function ProgramDetail({
                   </div>
                   
                   <div className="pt-4 space-y-4">
-                    <Link href="/donate" className="block">
+                    <Link href={`/donate?program=${program.id}`} className="block">
                       <Button size="lg" fullWidth className="text-lg shadow-md hover:shadow-lg">
                         Donate Now
                       </Button>
@@ -127,6 +127,24 @@ export default async function ProgramDetail({
           </div>
 
         </div>
+      </div>
+      {/* Mobile Pinned Bottom Action Bar */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 pb-6 bg-white border-t border-slate-200 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.1)] z-40">
+        <div className="flex justify-between items-center mb-3">
+          <div>
+            <span className="font-bold text-lg text-emerald-600">${program.raisedAmount.toLocaleString()}</span>
+            <span className="text-xs text-slate-500 ml-1">raised</span>
+          </div>
+          <div className="text-xs text-slate-500 font-medium">
+            Goal: ${program.goalAmount.toLocaleString()}
+          </div>
+        </div>
+        <Progress value={program.raisedAmount} max={program.goalAmount} className="h-2 mb-4" />
+        <Link href={`/donate?program=${program.id}`} className="block">
+          <Button size="lg" fullWidth className="shadow-md">
+            Donate Now
+          </Button>
+        </Link>
       </div>
     </div>
   );

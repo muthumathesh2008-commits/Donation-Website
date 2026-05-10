@@ -9,7 +9,7 @@ export interface Program {
   category: string;
 }
 
-export const mockPrograms: Program[] = [
+const initialPrograms: Program[] = [
   {
     id: "clean-water-initiative",
     title: "Clean Water Initiative",
@@ -17,7 +17,7 @@ export const mockPrograms: Program[] = [
     longDescription: "Our Clean Water Initiative builds sustainable wells and water purification systems in communities that lack access to basic sanitation. By funding this program, you directly contribute to reducing waterborne diseases and improving overall community health.",
     goalAmount: 50000,
     raisedAmount: 32500,
-    imagePlaceholder: "https://images.unsplash.com/photo-1470071131384-001b85755b36?auto=format&fit=crop&w=800&q=80",
+    imagePlaceholder: "/images/clean-water.png",
     category: "Health & Sanitation"
   },
   {
@@ -71,3 +71,23 @@ export const mockPrograms: Program[] = [
     category: "Livelihood"
   }
 ];
+
+declare global {
+  var mockPrograms: Program[] | undefined;
+}
+
+if (!global.mockPrograms) {
+  global.mockPrograms = initialPrograms;
+}
+
+export function getPrograms(): Program[] {
+  return global.mockPrograms || [];
+}
+
+export function getProgram(id: string): Program | undefined {
+  return (global.mockPrograms || []).find((p) => p.id === id);
+}
+
+// For compatibility during refactor, we still export mockPrograms as a getter-like fallback,
+// but pages should ideally use getPrograms() to ensure they get the freshest reference.
+export const mockPrograms = global.mockPrograms;

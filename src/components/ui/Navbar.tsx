@@ -61,7 +61,7 @@ export const Navbar = () => {
 
       {/* Mobile Navigation */}
       {isOpen && (
-        <div className="md:hidden bg-white border-b border-slate-100 absolute w-full left-0">
+        <div className="md:hidden bg-white border-b border-slate-100 absolute top-full w-full left-0">
           <div className="px-4 pt-2 pb-6 space-y-4 flex flex-col shadow-lg">
             {navLinks.map((link) => (
               <Link
