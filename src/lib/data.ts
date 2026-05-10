@@ -1,3 +1,5 @@
+import { cacheLife, cacheTag } from 'next/cache';
+
 export interface Program {
   id: string;
   title: string;
@@ -80,12 +82,29 @@ if (!global.mockPrograms) {
   global.mockPrograms = initialPrograms;
 }
 
-export function getPrograms(): Program[] {
+export async function getPrograms(): Promise<Program[]> {
+  'use cache'
+  cacheLife('max')
+  cacheTag('programs')
   return global.mockPrograms || [];
 }
 
-export function getProgram(id: string): Program | undefined {
+export async function getProgram(id: string): Promise<Program | undefined> {
+  'use cache'
+  cacheLife('max')
+  cacheTag('programs', `program-${id}`)
   return (global.mockPrograms || []).find((p) => p.id === id);
+}
+
+export function addDonationToProgram(id: string, amount: number): Program | undefined {
+  const program = (global.mockPrograms || []).find((p) => p.id === id);
+
+  if (!program) {
+    return undefined;
+  }
+
+  program.raisedAmount += amount;
+  return program;
 }
 
 // For compatibility during refactor, we still export mockPrograms as a getter-like fallback,

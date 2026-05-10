@@ -1,6 +1,9 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
 import { HeartHandshake, MessageCircle, Users, Camera, Mail } from 'lucide-react';
+import { CurrentYear } from './CurrentYear';
 
 export const Footer = () => {
   return (
@@ -59,7 +62,7 @@ export const Footer = () => {
         
         <div className="pt-8 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-slate-400 text-sm">
-            &copy; {new Date().getFullYear()} Hope Foundation. All rights reserved.
+            &copy; <CurrentYear /> Hope Foundation. All rights reserved.
           </p>
           <div className="flex space-x-6">
             <a href="#" className="text-slate-400 hover:text-slate-600 text-sm transition-colors">Privacy Policy</a>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { CreditCard, Heart, Loader2, CheckCircle, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -16,17 +16,45 @@ interface DonateFormProps {
   initialProgramId?: string;
 }
 
+function formatCurrency(amount: number) {
+  return `Rs. ${amount.toLocaleString('en-IN')}`;
+}
+
+function getSuggestedAmounts(program?: Program) {
+  if (!program) {
+    return [500, 1000, 5000];
+  }
+
+  const remainingAmount = Math.max(program.goalAmount - program.raisedAmount, 0);
+  const baseAmounts = [
+    Math.max(100, Math.round((program.goalAmount * 0.01) / 100) * 100),
+    Math.max(500, Math.round((program.goalAmount * 0.025) / 100) * 100),
+    Math.max(1000, Math.round((program.goalAmount * 0.05) / 100) * 100),
+  ];
+
+  const suggestedAmounts = baseAmounts.map((presetAmount) =>
+    remainingAmount > 0 ? Math.min(presetAmount, remainingAmount) : presetAmount,
+  );
+
+  return Array.from(new Set(suggestedAmounts)).sort((a, b) => a - b);
+}
+
 export function DonateForm({ programs, initialProgramId }: DonateFormProps) {
   const [step, setStep] = useState<Step>(1);
   const [amount, setAmount] = useState<number | ''>('');
   const [customAmount, setCustomAmount] = useState<string>('');
-  const [selectedProgramId, setSelectedProgramId] = useState<string>(initialProgramId || programs[0]?.id || '');
+  const [currentPrograms, setCurrentPrograms] = useState(programs);
+  const [selectedProgramId, setSelectedProgramId] = useState<string>(
+    initialProgramId || programs[0]?.id || '',
+  );
   const [isProcessing, setIsProcessing] = useState(false);
+  const [updatedTotal, setUpdatedTotal] = useState<number | null>(null);
 
-  const predefinedAmounts = [500, 1000, 5000];
+  const selectedProgram = currentPrograms.find((program) => program.id === selectedProgramId);
+  const predefinedAmounts = getSuggestedAmounts(selectedProgram);
 
-  const handleAmountSelect = (val: number) => {
-    setAmount(val);
+  const handleAmountSelect = (value: number) => {
+    setAmount(value);
     setCustomAmount('');
   };
 
@@ -35,20 +63,33 @@ export function DonateForm({ programs, initialProgramId }: DonateFormProps) {
     setAmount('');
   };
 
-  const getActiveAmount = () => amount || parseInt(customAmount) || 0;
+  const handleProgramChange = (programId: string) => {
+    setSelectedProgramId(programId);
+    setAmount('');
+    setCustomAmount('');
+  };
+
+  const getActiveAmount = () => amount || parseInt(customAmount, 10) || 0;
 
   const handlePayment = async () => {
     setIsProcessing(true);
-    
-    // Simulate API call delay for UX
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
+
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
     try {
-      await processDonation(selectedProgramId, getActiveAmount());
+      const result = await processDonation(selectedProgramId, getActiveAmount());
+
+      setCurrentPrograms((existingPrograms) =>
+        existingPrograms.map((program) =>
+          program.id === result.programId
+            ? { ...program, raisedAmount: result.newTotal }
+            : program,
+        ),
+      );
+      setUpdatedTotal(result.newTotal);
       setStep(4);
     } catch (error) {
-      console.error("Donation failed:", error);
-      // In a real app, handle error UI here
+      console.error('Donation failed:', error);
     } finally {
       setIsProcessing(false);
     }
@@ -70,11 +111,9 @@ export function DonateForm({ programs, initialProgramId }: DonateFormProps) {
       )}
 
       <Card className="shadow-xl border-emerald-50 relative overflow-hidden">
-        {/* Header Accent */}
         <div className="h-2 w-full bg-emerald-500" />
-        
+
         <CardContent className="p-8">
-          {/* STEP 1: Amount */}
           {step === 1 && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="text-center space-y-2">
@@ -92,52 +131,63 @@ export function DonateForm({ programs, initialProgramId }: DonateFormProps) {
                 <select
                   id="program-select"
                   value={selectedProgramId}
-                  onChange={(e) => setSelectedProgramId(e.target.value)}
+                  onChange={(e) => handleProgramChange(e.target.value)}
                   className="block w-full px-4 py-3 rounded-xl border-2 border-slate-200 bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors outline-none text-slate-900 font-medium cursor-pointer"
                 >
-                  <option value="" disabled>Select a program...</option>
-                  {programs.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.title}
+                  <option value="" disabled>
+                    Select a program...
+                  </option>
+                  {currentPrograms.map((program) => (
+                    <option key={program.id} value={program.id}>
+                      {program.title}
                     </option>
                   ))}
                 </select>
+                {selectedProgram ? (
+                  <p className="text-sm text-slate-500">
+                    Raised {formatCurrency(selectedProgram.raisedAmount)} of{' '}
+                    {formatCurrency(selectedProgram.goalAmount)}
+                  </p>
+                ) : null}
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
-                {predefinedAmounts.map((amt) => (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {predefinedAmounts.map((presetAmount) => (
                   <button
-                    key={amt}
-                    onClick={() => handleAmountSelect(amt)}
+                    key={presetAmount}
+                    onClick={() => handleAmountSelect(presetAmount)}
                     className={`py-3 rounded-2xl border-2 font-bold text-lg transition-all ${
-                      amount === amt
+                      amount === presetAmount
                         ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
                         : 'border-slate-200 bg-white text-slate-600 hover:border-emerald-200 hover:bg-slate-50'
                     }`}
                   >
-                    ₹{amt}
+                    {formatCurrency(presetAmount)}
                   </button>
                 ))}
               </div>
 
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <span className="text-slate-500 font-medium">₹</span>
+                  <span className="text-slate-500 font-medium">Rs.</span>
                 </div>
                 <input
                   type="number"
+                  min="1"
                   placeholder="Custom Amount"
                   value={customAmount}
                   onChange={handleCustomAmount}
-                  className={`block w-full pl-8 pr-4 py-4 rounded-2xl border-2 text-lg transition-colors focus:outline-none ${
-                    customAmount ? 'border-emerald-500 bg-emerald-50 text-emerald-900' : 'border-slate-200 bg-white focus:border-emerald-500'
+                  className={`block w-full pl-12 pr-4 py-4 rounded-2xl border-2 text-lg transition-colors focus:outline-none ${
+                    customAmount
+                      ? 'border-emerald-500 bg-emerald-50 text-emerald-900'
+                      : 'border-slate-200 bg-white focus:border-emerald-500'
                   }`}
                 />
               </div>
 
-              <Button 
-                size="lg" 
-                fullWidth 
+              <Button
+                size="lg"
+                fullWidth
                 onClick={() => setStep(2)}
                 disabled={getActiveAmount() < 1 || !selectedProgramId}
               >
@@ -146,7 +196,6 @@ export function DonateForm({ programs, initialProgramId }: DonateFormProps) {
             </div>
           )}
 
-          {/* STEP 2: Personal Info */}
           {step === 2 && (
             <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
               <div className="flex items-center mb-6">
@@ -158,7 +207,9 @@ export function DonateForm({ programs, initialProgramId }: DonateFormProps) {
 
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+                  <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-1">
+                    Full Name
+                  </label>
                   <input
                     type="text"
                     id="name"
@@ -167,7 +218,9 @@ export function DonateForm({ programs, initialProgramId }: DonateFormProps) {
                   />
                 </div>
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
+                  <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">
+                    Email Address
+                  </label>
                   <input
                     type="email"
                     id="email"
@@ -183,23 +236,26 @@ export function DonateForm({ programs, initialProgramId }: DonateFormProps) {
             </div>
           )}
 
-          {/* STEP 3: Payment */}
           {step === 3 && (
             <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center">
-                  <button onClick={() => setStep(2)} className="text-slate-400 hover:text-slate-600" disabled={isProcessing}>
+                  <button
+                    onClick={() => setStep(2)}
+                    className="text-slate-400 hover:text-slate-600"
+                    disabled={isProcessing}
+                  >
                     <ArrowLeft className="h-6 w-6" />
                   </button>
                   <h2 className="text-2xl font-bold text-slate-900 ml-4">Payment</h2>
                 </div>
                 <div className="text-xl font-bold text-emerald-600">
-                  ₹{getActiveAmount().toLocaleString()}
+                  {formatCurrency(getActiveAmount())}
                 </div>
               </div>
 
               <div className="space-y-3">
-                <button 
+                <button
                   onClick={handlePayment}
                   disabled={isProcessing}
                   className="w-full flex items-center justify-between px-6 py-4 rounded-xl border-2 border-slate-200 hover:border-emerald-500 bg-white hover:bg-slate-50 transition-colors group disabled:opacity-50 disabled:pointer-events-none"
@@ -208,11 +264,13 @@ export function DonateForm({ programs, initialProgramId }: DonateFormProps) {
                     <div className="h-8 w-8 rounded bg-slate-100 flex items-center justify-center mr-4 group-hover:bg-emerald-100 transition-colors">
                       <CreditCard className="h-4 w-4 text-slate-600 group-hover:text-emerald-600" />
                     </div>
-                    <span className="font-semibold text-slate-700 group-hover:text-slate-900">Pay with UPI</span>
+                    <span className="font-semibold text-slate-700 group-hover:text-slate-900">
+                      Pay with UPI
+                    </span>
                   </div>
                 </button>
-                
-                <button 
+
+                <button
                   onClick={handlePayment}
                   disabled={isProcessing}
                   className="w-full flex items-center justify-between px-6 py-4 rounded-xl border-2 border-slate-200 hover:border-emerald-500 bg-white hover:bg-slate-50 transition-colors group disabled:opacity-50 disabled:pointer-events-none"
@@ -221,7 +279,9 @@ export function DonateForm({ programs, initialProgramId }: DonateFormProps) {
                     <div className="h-8 w-8 rounded bg-slate-100 flex items-center justify-center mr-4 group-hover:bg-emerald-100 transition-colors">
                       <CreditCard className="h-4 w-4 text-slate-600 group-hover:text-emerald-600" />
                     </div>
-                    <span className="font-semibold text-slate-700 group-hover:text-slate-900">Credit / Debit Card</span>
+                    <span className="font-semibold text-slate-700 group-hover:text-slate-900">
+                      Credit / Debit Card
+                    </span>
                   </div>
                 </button>
               </div>
@@ -235,7 +295,6 @@ export function DonateForm({ programs, initialProgramId }: DonateFormProps) {
             </div>
           )}
 
-          {/* STEP 4: Success State */}
           {step === 4 && (
             <div className="text-center py-8 space-y-6 animate-in zoom-in duration-500">
               <Confetti />
@@ -244,9 +303,18 @@ export function DonateForm({ programs, initialProgramId }: DonateFormProps) {
               </div>
               <h2 className="text-3xl font-bold text-slate-900">Thank You!</h2>
               <p className="text-slate-600 text-lg max-w-sm mx-auto">
-                Your generous donation of <span className="font-bold text-emerald-600">₹{getActiveAmount().toLocaleString()}</span> has been processed successfully. You are changing lives!
+                Your generous donation of{' '}
+                <span className="font-bold text-emerald-600">{formatCurrency(getActiveAmount())}</span>{' '}
+                has been processed successfully. You are changing lives!
               </p>
-              
+              {selectedProgram && updatedTotal !== null ? (
+                <p className="text-sm text-slate-500 max-w-sm mx-auto">
+                  {selectedProgram.title} has now raised{' '}
+                  <span className="font-semibold text-slate-700">{formatCurrency(updatedTotal)}</span>{' '}
+                  of {formatCurrency(selectedProgram.goalAmount)}.
+                </p>
+              ) : null}
+
               <div className="pt-8">
                 <Link href="/">
                   <Button variant="outline" size="lg" className="px-8">
@@ -256,7 +324,6 @@ export function DonateForm({ programs, initialProgramId }: DonateFormProps) {
               </div>
             </div>
           )}
-
         </CardContent>
       </Card>
 

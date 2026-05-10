@@ -1,22 +1,31 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+
+type Particle = {
+  id: number;
+  left: string;
+  animationDuration: string;
+  animationDelay: string;
+  color: string;
+  type: 'circle' | 'rect';
+};
+
+function createParticles(): Particle[] {
+  const colors = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
+
+  return Array.from({ length: 50 }, (_, i) => ({
+    id: i,
+    left: `${Math.random() * 100}%`,
+    animationDuration: `${Math.random() * 2 + 1}s`,
+    animationDelay: `${Math.random() * 0.5}s`,
+    color: colors[Math.floor(Math.random() * colors.length)],
+    type: Math.random() > 0.5 ? 'circle' : 'rect',
+  }));
+}
 
 export const Confetti = () => {
-  const [particles, setParticles] = useState<Array<{ id: number; left: string; animationDuration: string; animationDelay: string; color: string; type: 'circle' | 'rect' }>>([]);
-
-  useEffect(() => {
-    const colors = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
-    const newParticles = Array.from({ length: 50 }).map((_, i) => ({
-      id: i,
-      left: `${Math.random() * 100}%`,
-      animationDuration: `${Math.random() * 2 + 1}s`,
-      animationDelay: `${Math.random() * 0.5}s`,
-      color: colors[Math.floor(Math.random() * colors.length)],
-      type: (Math.random() > 0.5 ? 'circle' : 'rect') as 'circle' | 'rect',
-    }));
-    setParticles(newParticles);
-  }, []);
+  const [particles] = useState(createParticles);
 
   return (
     <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
@@ -35,7 +44,7 @@ export const Confetti = () => {
           }}
         />
       ))}
-      <style dangerouslySetInnerHTML={{__html: `
+      <style dangerouslySetInnerHTML={{ __html: `
         @keyframes confetti-fall {
           0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
           100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }

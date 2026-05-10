@@ -1,20 +1,26 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
-import { getProgram } from '@/lib/data';
+import { updateTag } from 'next/cache';
+import { addDonationToProgram } from '@/lib/data';
 
 export async function processDonation(programId: string, amount: number) {
-  const program = getProgram(programId);
+  if (!Number.isFinite(amount) || amount < 1) {
+    throw new Error('Donation amount must be greater than zero');
+  }
+
+  const program = addDonationToProgram(programId, amount);
   
   if (!program) {
     throw new Error('Program not found');
   }
 
-  // Mutate the global state directly
-  program.raisedAmount += amount;
-
-  // Revalidate the cache so the UI reflects the new raised amount
-  revalidatePath('/', 'layout');
+  // Expire the relevant cache tags immediately so the next read sees fresh data.
+  updateTag('programs');
+  updateTag(`program-${programId}`);
   
-  return { success: true, newTotal: program.raisedAmount };
+  return {
+    success: true,
+    programId,
+    newTotal: program.raisedAmount,
+  };
 }

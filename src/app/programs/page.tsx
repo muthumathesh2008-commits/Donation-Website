@@ -11,8 +11,8 @@ export const metadata = {
   description: 'Explore the various programs we support worldwide to provide relief, education, and sustainable development.',
 };
 
-export default function ProgramsPage() {
-  const programs = getPrograms();
+export default async function ProgramsPage() {
+  const programs = await getPrograms();
 
   return (
     <div className="min-h-screen bg-slate-50 py-16 px-4 sm:px-6 lg:px-8">

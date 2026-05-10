@@ -7,8 +7,8 @@ import { Card, CardContent } from '@/components/ui/Card';
 import { Progress } from '@/components/ui/Progress';
 import { getPrograms } from '@/lib/data';
 
-export default function Home() {
-  const programs = getPrograms();
+export default async function Home() {
+  const programs = await getPrograms();
   const featuredPrograms = programs.slice(0, 3);
 
   return (

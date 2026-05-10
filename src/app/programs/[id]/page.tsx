@@ -6,7 +6,15 @@ import { ArrowLeft, Target, TrendingUp, Users } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Progress } from '@/components/ui/Progress';
-import { getProgram } from '@/lib/data';
+import { getProgram, getPrograms } from '@/lib/data';
+
+export async function generateStaticParams() {
+  const programs = await getPrograms();
+
+  return programs.map((program) => ({
+    id: program.id,
+  }));
+}
 
 export default async function ProgramDetail({
   params,
@@ -14,7 +22,7 @@ export default async function ProgramDetail({
   params: Promise<{ id: string }>;
 }) {
   const resolvedParams = await params;
-  const program = getProgram(resolvedParams.id);
+  const program = await getProgram(resolvedParams.id);
 
   if (!program) {
     notFound();
