@@ -205,34 +205,48 @@ export function DonateForm({ programs, initialProgramId }: DonateFormProps) {
                 <h2 className="text-2xl font-bold text-slate-900 ml-4">Your Details</h2>
               </div>
 
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-1">
-                    Full Name
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    placeholder="John Doe"
-                    className="block w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors outline-none"
-                  />
+              <form
+                className="space-y-8"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  setStep(3);
+                }}
+              >
+                <div className="space-y-4">
+                  <div>
+                    <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-1">
+                      Full Name
+                    </label>
+                    <input
+                      type="text"
+                      id="name"
+                      name="name"
+                      placeholder="John Doe"
+                      required
+                      autoComplete="name"
+                      className="block w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      id="email"
+                      name="email"
+                      placeholder="john@example.com"
+                      required
+                      autoComplete="email"
+                      className="block w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors outline-none"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    placeholder="john@example.com"
-                    className="block w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors outline-none"
-                  />
-                </div>
-              </div>
 
-              <Button size="lg" fullWidth onClick={() => setStep(3)}>
-                Proceed to Payment
-              </Button>
+                <Button size="lg" fullWidth type="submit">
+                  Proceed to Payment
+                </Button>
+              </form>
             </div>
           )}
 
